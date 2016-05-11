@@ -1,0 +1,94 @@
+<html>
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="raphael.2.1.0.min.js"></script>
+<script src="justgage.1.0.1.min.js"></script>
+
+<script>
+var accessToken = "fc17729be9e2a00544f66f0539892e48f452ebe6";
+var deviceID = "320044001047353138383138";
+var voltageUrl = "https://api.spark.io/v1/devices/" + deviceID + "/cellVoltage";
+var chargeUrl = "https://api.spark.io/v1/devices/" + deviceID + "/chargeState";
+var motorUrl = "https://api.spark.io/v1/devices/" + deviceID + "/motor";
+
+// post to Photon to enable motor
+function motorOn()
+{
+	$.post(motorUrl, {params: "on", access_token: accessToken });
+}  
+
+// post to Photon to disable motor
+function motorOff()
+{
+	$.post(motorUrl, {params: "off", access_token: accessToken });
+}  
+
+// update voltage meter widget
+function voltageCallback(data, status){
+	if (status == "success") {
+		volts = parseFloat(data.result);
+		volts = volts.toFixed(2);
+		voltageMeter .refresh(volts);
+		setTimeout(getVoltageReading, 1000);
+	}
+	else {
+		alert("There was a problem");
+	}
+}
+function getVoltageReading(){
+	$.get(voltageUrl , {access_token: accessToken}, voltageCallback);
+}
+
+// update charge meter widget
+function chargeCallback(data, status){
+	if (status == "success") {
+		charge = parseFloat(data.result);
+		charge = charge.toFixed(2);
+		chargeMeter.refresh(charge);
+		setTimeout(getReading, 1000);
+	}
+	else {
+		alert("There was a problem");
+	}
+}
+function getChargeReading(){
+   	$.get(chargeUrl , {access_token: accessToken}, chargeCallback);
+}
+</script>
+</head>	
+
+<body>
+<h1>Battery Status Meters</h1>	
+<div style="width: 400px; height: 160px;">
+  <div id="theVoltageMeter" style="float: left; width: 200px; height: 160px;"></div>
+  <div id="theChargeMeter" style="float: right; width: 200px; height: 160px;"></div>
+<div>
+
+<h1>Load Control</h1>	
+<input type="button" onClick="motorOn()" value="ON"/>
+<input type="button" onClick="motorOff()" value="OFF"/>
+
+<script>
+// declare voltage meter widget
+var voltageMeter = new JustGage({
+    id: "theVoltageMeter",
+    value: 0,
+    min: 0,
+    max: 5.0,
+    title: "Battery Voltage"
+});
+getVoltageReading();
+
+// declare charge meter widget
+var chargeMeter = new JustGage({
+    id: "theChargeMeter",
+    value: 0,
+    min: 0,
+    max: 100.0,
+    title: "Percent Charged"
+});
+getChargeReading();
+</script>
+
+</body>
+</html>
